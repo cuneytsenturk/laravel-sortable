@@ -18,15 +18,24 @@
             "email": "info@akaunting.com",
             "homepage": "https://akaunting.com",
             "role": "Developer"
+        },
+        {
+            "name": "Cüneyt Şentürk",
+            "email": "info@akaunting.com",
+            "homepage": "https://akaunting.com",
+            "role": "Developer"
         }
     ],
     "require": {
         "php": "^8.0",
-        "laravel/framework": "^9.0|^10.0"
+        "laravel/framework": "^9.0|^10.0|^11.0|^12.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^9.5|^10.0",
-        "orchestra/testbench": "^7.4|^8.0"
+        "phpunit/phpunit": "^9.5|^10.0|^11.0",
+        "orchestra/testbench": "^7.4|^8.0|^9.0|^10.0",
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "phpstan/phpstan": "^1.0",
+        "larastan/larastan": "^2.0"
     },
     "autoload": {
         "psr-4": {
@@ -44,6 +53,18 @@
                 "Akaunting\\Sortable\\Provider"
             ]
         }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage",
+        "format": "vendor/bin/php-cs-fixer fix",
+        "format-dry": "vendor/bin/php-cs-fixer fix --dry-run --diff",
+        "analyse": "vendor/bin/phpstan analyse",
+        "quality": [
+            "@format-dry",
+            "@analyse",
+            "@test"
+        ]
     },
     "minimum-stability": "dev",
     "prefer-stable": true

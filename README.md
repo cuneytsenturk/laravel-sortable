@@ -7,6 +7,11 @@
 
 This package allows you to add sortable behavior to `models` and `views`. It ships with a trait where you can set the sortable fields and a blade directive to generate table headers automatically.
 
+## Requirements
+
+- PHP 8.0 or higher
+- Laravel 9.0, 10.0, 11.0, or 12.0
+
 ## Getting Started
 
 ### 1. Install
@@ -220,6 +225,7 @@ Please review [our security policy](https://github.com/akaunting/laravel-sortabl
 
 ## Credits
 
+- [Cüneyt Şentürk](https://github.com/cuneytsenturk)
 - [Denis Duliçi](https://github.com/denisdulici)
 - [Martin Kiesel](https://github.com/Kyslik)
 - [All Contributors](../../contributors)

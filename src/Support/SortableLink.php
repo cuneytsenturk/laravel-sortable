@@ -6,14 +6,20 @@ use Akaunting\Sortable\Exceptions\SortableException;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Str;
 
-class SortableLink
+final class SortableLink
 {
     /**
      * @throws SortableException
      */
     public static function render(array $parameters): string
     {
-        list($sortColumn, $sortParameter, $title, $queryParameters, $anchorAttributes) = self::parseParameters($parameters);
+        [
+            $sortColumn,
+            $sortParameter,
+            $title,
+            $queryParameters,
+            $anchorAttributes
+        ] = self::parseParameters($parameters);
 
         $title = self::applyFormatting($title, $sortColumn);
 
@@ -21,7 +27,7 @@ class SortableLink
             request()->merge([$mergeTitleAs => $title]);
         }
 
-        list($icon, $direction) = self::getDirectionAndIcon($sortColumn, $sortParameter);
+        [$icon, $direction] = self::getDirectionAndIcon($sortColumn, $sortParameter);
 
         $trailingTag = self::getTrailingTag($icon);
 
@@ -33,7 +39,13 @@ class SortableLink
 
         $url = self::buildUrl($queryString, $anchorAttributes);
 
-        return '<a' . $anchorClass . ' href="' . $url . '"' . $anchorAttributesString . '>' . e($title) . $trailingTag;
+        return '<a' 
+            . $anchorClass 
+            . ' href="' . $url . '"' 
+            . $anchorAttributesString 
+            . '>' 
+            . e($title) 
+            . $trailingTag;
     }
 
     /**
@@ -75,12 +87,7 @@ class SortableLink
         return [];
     }
 
-    /**
-     * @param string|Htmlable|null $title
-     *
-     * @return string|Htmlable
-     */
-    private static function applyFormatting($title, string $sortColumn)
+    private static function applyFormatting(string|Htmlable|null $title, string $sortColumn): string|Htmlable
     {
         if ($title instanceof Htmlable) {
             return $title;
@@ -103,7 +110,7 @@ class SortableLink
         return $title;
     }
 
-    private static function getDirectionAndIcon($sortColumn, $sortParameter): array
+    private static function getDirectionAndIcon(string $sortColumn, string $sortParameter): array
     {
         $icon = self::selectIcon($sortColumn);
 
@@ -126,7 +133,7 @@ class SortableLink
         return [$icon, $direction];
     }
 
-    private static function selectIcon($sortColumn): string
+    private static function selectIcon(string $sortColumn): string
     {
         $icon = config('sortable.icons.default');
 
@@ -139,10 +146,7 @@ class SortableLink
         return $icon;
     }
 
-    /**
-     * @param string|null $icon
-     */
-    private static function getTrailingTag($icon): string
+    private static function getTrailingTag(string|null $icon): string
     {
         if (! config('sortable.icons.enabled')) {
             return '</a>';
@@ -174,9 +178,11 @@ class SortableLink
 
         $directionClassPrefix = config('sortable.direction_anchor_class_prefix');
         if (($directionClassPrefix !== null) && self::shouldShowActive($sortColumn)) {
-            $class[] = $directionClassPrefix . (request()->get('direction') === 'asc')
-                                                    ? config('sortable.asc_suffix', '-asc')
-                                                    : config('sortable.desc_suffix', '-desc');
+            $suffix = (request()->get('direction') === 'asc')
+                ? config('sortable.asc_suffix', '-asc')
+                : config('sortable.desc_suffix', '-desc');
+            
+            $class[] = $directionClassPrefix . $suffix;
         }
 
         if (isset($anchorAttributes['class'])) {
@@ -195,12 +201,16 @@ class SortableLink
 
     private static function buildQueryString(array $queryParameters, string $sortParameter, string $direction): string
     {
-        $checkStrlenOrArray = function ($element) {
+        $checkStrlenOrArray = function (mixed $element): mixed {
             return is_array($element) ? $element : strlen($element);
         };
 
-        $persistParameters = array_filter(request()->except('sort', 'direction', 'page'), $checkStrlenOrArray);
-        $queryString       = http_build_query(array_merge($queryParameters, $persistParameters, [
+        $persistParameters = array_filter(
+            request()->except('sort', 'direction', 'page'), 
+            $checkStrlenOrArray
+        );
+
+        $queryString = http_build_query(array_merge($queryParameters, $persistParameters, [
             'sort'      => $sortParameter,
             'direction' => $direction,
         ]));
@@ -226,15 +236,14 @@ class SortableLink
 
     private static function buildUrl(string $queryString, array $anchorAttributes): string
     {
-        $path = isset($anchorAttributes['href']) ? $anchorAttributes['href'] : request()->path();
+        $path = isset($anchorAttributes['href']) 
+            ? $anchorAttributes['href'] 
+            : request()->path();
 
         return url($path . "?" . $queryString);
     }
 
-    /**
-     * @param string|null $icon
-     */
-    public static function getIconHtml($icon): string
+    public static function getIconHtml(string|null $icon): string
     {
         $prefix = config('sortable.icons.prefix');
         $suffix = config('sortable.icons.suffix');

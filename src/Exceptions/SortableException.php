@@ -4,9 +4,9 @@ namespace Akaunting\Sortable\Exceptions;
 
 use Exception;
 
-class SortableException extends Exception
+final class SortableException extends Exception
 {
-    public function __construct($message = '', $code = 0, Exception $previous = null)
+    public function __construct(string $message = '', int $code = 0, Exception|null $previous = null)
     {
         switch ($code) {
             case 0:

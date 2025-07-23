@@ -10,19 +10,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 trait Sortable
 {
     /**
-     * @param array|null $defaultParameters
-     *
      * @throws SortableException
      */
-    public function scopeSortable(Builder $query, $defaultParameters = null): Builder
+    public function scopeSortable(Builder $query, array|null $defaultParameters = null): Builder
     {
-        if (request()->allFilled(['sort', 'direction']) && $this->columnExists($this, request()->get('sort'))) { // allFilled() is macro
+        if (
+            request()->allFilled(['sort', 'direction']) 
+            && $this->columnExists($this, request()->get('sort'))
+        ) { // allFilled() is macro
             return $this->queryOrderBuilder($query, request()->only(['sort', 'direction']));
         }
 
@@ -33,7 +34,10 @@ trait Sortable
         if (! is_null($defaultParameters)) {
             $defaultSortArray = $this->formatToParameters($defaultParameters);
 
-            if (config('sortable.allow_request_modification', true) && ! empty($defaultSortArray)) {
+            if (
+                config('sortable.allow_request_modification', true) 
+                && ! empty($defaultSortArray)
+            ) {
                 request()->merge($defaultSortArray);
             }
 
@@ -45,10 +49,8 @@ trait Sortable
 
     /**
      * Returns the first element of defined sortable columns from the Model
-     *
-     * @return array|null
      */
-    private function getDefaultSortable()
+    private function getDefaultSortable(): array|null
     {
         if (config('sortable.default_first_column', false)) {
             $sortBy = Arr::first($this->sortable);
@@ -68,7 +70,7 @@ trait Sortable
     {
         $model = $this;
 
-        list($column, $direction) = $this->parseParameters($sortParameters);
+        [$column, $direction] = $this->parseParameters($sortParameters);
 
         if (is_null($column)) {
             return $query;
@@ -121,11 +123,9 @@ trait Sortable
     }
 
     /**
-     * @param BelongsTo|HasOne $relation
-     *
      * @throws \Exception
      */
-    private function queryJoinBuilder(Builder $query, $relation): Builder
+    private function queryJoinBuilder(Builder $query, BelongsTo|HasOne|MorphOne $relation): Builder
     {
         $relatedTable = $relation->getRelated()->getTable();
         $parentTable  = $relation->getParent()->getTable();
@@ -146,22 +146,23 @@ trait Sortable
             throw new \Exception();
         }
 
-        return $this->formJoin($query, $parentTable, $relatedTable, $parentPrimaryKey, $relatedPrimaryKey);
+        return $this->formJoin(
+            $query, 
+            $parentTable, 
+            $relatedTable, 
+            $parentPrimaryKey, 
+            $relatedPrimaryKey
+        );
     }
 
-    private function columnExists($model, $column): bool
+    private function columnExists(mixed $model, string $column): bool
     {
         return isset($model->sortable)
-                ? in_array($column, $model->sortable)
-                : Schema::connection($model->getConnectionName())->hasColumn($model->getTable(), $column);
+            ? in_array($column, $model->sortable)
+            : Schema::connection($model->getConnectionName())->hasColumn($model->getTable(), $column);
     }
 
-    /**
-     * @param array|string $array
-     *
-     * @return array
-     */
-    private function formatToParameters($array): array
+    private function formatToParameters(array|string $array): array
     {
         if (empty($array)) {
             return [];
@@ -174,23 +175,21 @@ trait Sortable
         }
 
         return (key($array) === 0)
-                ? ['sort' => $array[0], 'direction' => $defaultDirection]
-                : ['sort' => key($array), 'direction' => reset($array)];
+            ? ['sort' => $array[0], 'direction' => $defaultDirection]
+            : ['sort' => key($array), 'direction' => reset($array)];
     }
 
-    /**
-     * @param $query
-     * @param $parentTable
-     * @param $relatedTable
-     * @param $parentPrimaryKey
-     * @param $relatedPrimaryKey
-     *
-     * @return mixed
-     */
-    private function formJoin($query, $parentTable, $relatedTable, $parentPrimaryKey, $relatedPrimaryKey)
-    {
+    private function formJoin(
+        Builder $query,
+        string $parentTable,
+        string $relatedTable,
+        string $parentPrimaryKey,
+        string $relatedPrimaryKey
+    ): Builder {
         $joinType = config('sortable.join_type', 'leftJoin');
 
-        return $query->select($parentTable . '.*')->{$joinType}($relatedTable, $parentPrimaryKey, '=', $relatedPrimaryKey);
+        return $query
+            ->select($parentTable . '.*')
+            ->{$joinType}($relatedTable, $parentPrimaryKey, '=', $relatedPrimaryKey);
     }
 }

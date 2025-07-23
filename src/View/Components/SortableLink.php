@@ -5,46 +5,32 @@ namespace Akaunting\Sortable\View\Components;
 use Akaunting\Sortable\Support\SortableLink as Base;
 use Illuminate\View\Component;
 
-class SortableLink extends Component
+final class SortableLink extends Component
 {
     /**
      * The sortablelink column.
-     *
-     * @var string
      */
-    public $column;
+    public string $column;
 
     /**
      * The sortablelink title.
-     *
-     * @var string
      */
-    public $title;
+    public string $title;
 
     /**
      * The sortablelink query.
-     *
-     * @var array
      */
-    public $query;
+    public array $query;
 
     /**
      * The sortablelink arguments.
-     *
-     * @var array
      */
-    public $arguments;
+    public array $arguments;
 
     /**
      * Create the component instance.
-     *
-     * @param  string  $title
-     * @param  string  $column
-     * @param  array  $parameters
-     * @param  array  $attribute
-     * @return void
      */
-    public function __construct($column, $title, $query = [], $arguments = [])
+    public function __construct(string $column, string $title, array $query = [], array $arguments = [])
     {
         $this->column = $column;
         $this->title = $title;
@@ -54,10 +40,8 @@ class SortableLink extends Component
 
     /**
      * Get the view / contents that represent the component.
-     *
-     * @return \Illuminate\View\View|\Closure|string
      */
-    public function render()
+    public function render(): string
     {
         return Base::render([
             $this->column,

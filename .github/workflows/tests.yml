@@ -10,21 +10,36 @@ jobs:
 
     strategy:
       matrix:
-        php: ['8.0', '8.1', '8.2']
-        laravel: [9.*, 10.*]
+        php: ['8.0', '8.1', '8.2', '8.3']
+        laravel: [9.*, 10.*, 11.*, 12.*]
         stability: [prefer-lowest, prefer-stable]
         include:
           - laravel: 9.*
             testbench: 7.*
           - laravel: 10.*
             testbench: 8.*
+          - laravel: 11.*
+            testbench: 9.*
+          - laravel: 12.*
+            testbench: 10.*
         exclude:
+          # Laravel 10+ requires PHP 8.1+
           - laravel: 10.*
             php: 8.0
+          # Laravel 11+ requires PHP 8.2+
+          - laravel: 11.*
+            php: 8.0
+          - laravel: 11.*
+            php: 8.1
+          # Laravel 12+ requires PHP 8.2+  
+          - laravel: 12.*
+            php: 8.0
+          - laravel: 12.*
+            php: 8.1
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -37,5 +52,75 @@ jobs:
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
           composer update --${{ matrix.stability }} --prefer-dist --no-interaction
+
       - name: Execute tests
         run: vendor/bin/phpunit
+
+  code-quality:
+    name: Code Quality (PHP ${{ matrix.php }})
+    
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        php: ['8.0', '8.1', '8.2', '8.3']
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: bcmath, ctype, dom, fileinfo, intl, gd, json, mbstring, pdo, pdo_sqlite, openssl, sqlite, xml, zip
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction
+
+      - name: Check PSR-12 Coding Standards
+        run: |
+          if [ -f vendor/bin/php-cs-fixer ]; then
+            vendor/bin/php-cs-fixer fix --dry-run --diff --verbose
+          else
+            echo "PHP CS Fixer not installed, skipping style check"
+          fi
+
+      - name: Static Analysis with PHPStan
+        run: |
+          if [ -f vendor/bin/phpstan ]; then
+            vendor/bin/phpstan analyse
+          else
+            echo "PHPStan not installed, skipping static analysis"
+          fi
+
+  coverage:
+    name: Test Coverage
+    
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: bcmath, ctype, dom, fileinfo, intl, gd, json, mbstring, pdo, pdo_sqlite, openssl, sqlite, xml, zip
+          coverage: xdebug
+
+      - name: Install dependencies
+        run: |
+          composer require "laravel/framework:^10.0" "orchestra/testbench:^8.0" --no-interaction --no-update
+          composer install --prefer-dist --no-interaction
+
+      - name: Execute tests with coverage
+        run: vendor/bin/phpunit --coverage-clover=coverage.xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false

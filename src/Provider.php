@@ -7,24 +7,20 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\View\Compilers\BladeCompiler;
 
-class Provider extends ServiceProvider
+final class Provider extends ServiceProvider
 {
     /**
      * Register the application services.
-     *
-     * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->mergeConfigFrom(__DIR__ . '/Config/sortable.php', 'sortable');
     }
 
     /**
      * Bootstrap the application services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         $this->publishes([
             __DIR__ . '/Config/sortable.php' => config_path('sortable.php'),
@@ -35,10 +31,10 @@ class Provider extends ServiceProvider
         $this->registerMacros();
     }
 
-    public function registerBladeDirectives()
+    public function registerBladeDirectives(): void
     {
-        $this->callAfterResolving('blade.compiler', function (BladeCompiler $compiler) {
-            $compiler->directive('sortablelink', function ($expression) {
+        $this->callAfterResolving('blade.compiler', function (BladeCompiler $compiler): void {
+            $compiler->directive('sortablelink', function (string $expression): string {
                 $expression = ($expression[0] === '(') ? substr($expression, 1, -1) : $expression;
 
                 return "<?php echo \Akaunting\Sortable\Support\SortableLink::render(array ({$expression}));?>";
@@ -46,14 +42,14 @@ class Provider extends ServiceProvider
         });
     }
 
-    public function registerBladeComponents()
+    public function registerBladeComponents(): void
     {
         Blade::component('sortablelink', SortableLink::class);
     }
 
-    public function registerMacros()
+    public function registerMacros(): void
     {
-        request()->macro('allFilled', function (array $keys) {
+        request()->macro('allFilled', function (array $keys): bool {
             foreach ($keys as $key) {
                 if (! $this->filled($key)) {
                     return false;

@@ -1,0 +1,19 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+
+    paths:
+        - src
+
+    # Level 9 is the highest level
+    level: 5
+
+    ignoreErrors:
+        - '#Call to an undefined method.*?Request.*?#'
+        - '#Call to function config.*? from global namespace.*?#'
+        - '#Call to function request.*? from global namespace.*?#'
+        - '#Call to function url.*? from global namespace.*?#'
+        - '#Call to function e.*? from global namespace.*?#'
+
+    checkMissingIterableValueType: false
